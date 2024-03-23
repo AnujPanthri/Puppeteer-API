@@ -12,7 +12,8 @@ RUN apk update && apk add chromium-chromedriver chromium
 ENV PATH="/usr/lib/chromium/:${PATH}"
 RUN ln -s /usr/lib/chromium/chromium-launcher.sh /usr/local/bin/chrome
 
-RUN npx puppeteer browsers install chrome
+# RUN npx puppeteer browsers install chrome
+ENV CHROME_BIN=/usr/bin/chromium-browser
 
 COPY . /app
 WORKDIR /app
