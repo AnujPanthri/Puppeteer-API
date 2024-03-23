@@ -56,8 +56,11 @@ const getData = async () => {
     return { title, price, image };
 };
 
-
 app.get("/", async (req, res) => {
+    res.send('go to /test');
+})
+
+app.get("/test", async (req, res) => {
     const data = await getData();
     res.type("json");
     res.send(JSON.stringify(data));
