@@ -1,5 +1,7 @@
 FROM node:slim AS app
 
+# referenced :- https://dev.to/cloudx/how-to-use-puppeteer-inside-a-docker-container-568c
+
 # We don't need the standalone Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV CHROME_BIN=/usr/bin/google-chrome

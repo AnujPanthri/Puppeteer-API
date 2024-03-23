@@ -1,34 +1,53 @@
 const express = require("express")
 const app = express();
 const puppeteer = require("puppeteer");
+const bodyParser = require("body-parser");
+const mutler = require("multer");
+
+// parse application/json
+app.use(bodyParser.json());
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// app.use(express.urlencoded());
+app.use(mutler().array(""));
 
 
-const getData = async () => {
-    // Start a Puppeteer session with:
-    // - a visible browser (`headless: false` - easier to debug because you'll see the browser in action)
-    // - no default viewport (`defaultViewport: null` - website page will in full width and height)
+const initBrowser = async () => {
     const browser = await puppeteer.launch({
         executablePath: process.env.CHROME_BIN || null,
         defaultViewport: null,
         headless: true,
     });
+    return browser;
+}
 
-    console.log("Scrapping started");
-    // Open a new page
-    const page = await browser.newPage();
+async function addRequestFilter(page) {
+
+    const resourcetypes = ['document'];
+
     await page.setRequestInterception(true);
     page.on("request", (request) => {
         // return request.continue();
-        if(request.resourceType() == 'document'){
+        if (resourcetypes.includes(request.resourceType())) {
             request.continue();
         }
-        else{
+        else {
             request.abort();
         }
     });
 
-    
-    url = "https://www.flipkart.com/apple-iphone-15-blue-128-gb/p/itmbf14ef54f645d";
+    return page;
+}
+
+const getData = async (url) => {
+
+    // Open a new page
+    const browser = await initBrowser();
+    var page = await browser.newPage();
+    page = await addRequestFilter(page);
+
     await page.goto(url, {
         // waitUntil: "domcontentloaded",
     });
@@ -54,17 +73,118 @@ const getData = async () => {
 
 
     page.close();
-    return { title, price, image };
+    return {
+        title: title,
+        price: price,
+        image: image,
+    };
 };
+
+const getHTML = async (url) => {
+
+    const browser = await initBrowser();
+    var page = await browser.newPage();
+    page = await addRequestFilter(page);
+
+    await page.goto(url, {
+        // waitUntil: "domcontentloaded",
+    });
+
+    return await page.content();
+
+}
+const getScreenshot = async (url) => {
+
+    const browser = await initBrowser();
+    var page = await browser.newPage();
+
+    await page.goto(url, {
+        // waitUntil: "domcontentloaded",
+    });
+
+    const image = await page.screenshot({
+        type: "png",
+    });
+    page.close();
+    return image;
+
+}
 
 app.get("/", async (req, res) => {
     res.send('go to /test');
 })
 
+url = "https://www.flipkart.com/apple-iphone-15-blue-128-gb/p/itmbf14ef54f645d";
+
+
 app.get("/test", async (req, res) => {
-    const data = await getData();
+    const data = await getData(url);
     res.type("json");
     res.send(JSON.stringify(data));
+})
+
+app.get("/testhtml", async (req, res) => {
+    const html = await getHTML(url);
+    res.type("json");
+    res.send(JSON.stringify({
+        html: html
+    }));
+})
+app.get("/testscreenshot", async (req, res) => {
+    const image = await getScreenshot(url);
+    // convert buffer to base64 string
+    const base64Image = await image.toString('base64');
+
+    res.type("json");
+    return res.send(JSON.stringify({
+        "screenshot": "data:image/png;base64," + base64Image
+    }));
+})
+app.post("/html", async (req, res) => {
+    const data = req.body;
+    if(!("url" in data)){
+        res.type("json");
+        return res.send(JSON.stringify({
+            "error":"no url parameter in request",
+        }));
+    }
+    const url = data['url'];
+
+    try{
+        const html = await getHTML(url);
+        res.type("json").send(JSON.stringify({
+            html: html
+        }));
+    }
+    catch(e){
+        return res.type("json").send(JSON.stringify({
+            "error":"can't open page",
+        }));
+    }
+})
+app.post("/screenshot", async (req, res) => {
+    const data = req.body;
+    if(!("url" in data)){
+        return res.type("json").send(JSON.stringify({
+            "error":"no url parameter in request",
+        }));
+    }
+    const url = data['url'];
+    
+    try{
+        const image = await getScreenshot(url);
+        // convert buffer to base64 string
+        const base64Image = await image.toString('base64');
+    
+        return res.type("json").send(JSON.stringify({
+            "screenshot": "data:image/png;base64," + base64Image
+        }));
+    }
+    catch(e){
+        return res.type("json").send(JSON.stringify({
+            "error":"can't open page",
+        }));
+    }
 })
 
 app.listen(8080, () => console.log("Server running at port 8080"));
