@@ -14,14 +14,11 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(mutler().array(""));
 
 
-const initBrowser = async () => {
-    const browser = await puppeteer.launch({
-        executablePath: process.env.CHROME_BIN || null,
-        defaultViewport: null,
-        headless: true,
-    });
-    return browser;
-}
+const initBrowser = puppeteer.launch({
+    executablePath: process.env.CHROME_BIN || null,
+    defaultViewport: null,
+    headless: true,
+});
 
 async function addRequestFilter(page) {
 
@@ -44,7 +41,7 @@ async function addRequestFilter(page) {
 const getData = async (url) => {
 
     // Open a new page
-    const browser = await initBrowser();
+    const browser = await initBrowser;
     var page = await browser.newPage();
     page = await addRequestFilter(page);
 
@@ -80,11 +77,15 @@ const getData = async (url) => {
     };
 };
 
-const getHTML = async (url) => {
-
-    const browser = await initBrowser();
+const getHTML = async (url,headers=null) => {
+    
+    const browser = await initBrowser;
     var page = await browser.newPage();
     page = await addRequestFilter(page);
+    if(headers){
+        // console.log("headers",headers);
+        await page.setExtraHTTPHeaders(headers);
+    }
 
     await page.goto(url, {
         // waitUntil: "domcontentloaded",
@@ -93,9 +94,9 @@ const getHTML = async (url) => {
     return await page.content();
 
 }
-const getScreenshot = async (url) => {
+const getScreenshot = async (url,headers=null) => {
 
-    const browser = await initBrowser();
+    const browser = await initBrowser;
     var page = await browser.newPage();
 
     await page.goto(url, {
@@ -148,10 +149,10 @@ app.post("/html", async (req, res) => {
             "error":"no url parameter in request",
         }));
     }
-    const url = data['url'];
+    const {url,headers} = data;
 
     try{
-        const html = await getHTML(url);
+        const html = await getHTML(url,headers);
         res.type("json").send(JSON.stringify({
             html: html
         }));
