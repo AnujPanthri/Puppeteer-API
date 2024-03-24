@@ -77,12 +77,12 @@ const getData = async (url) => {
     };
 };
 
-const getHTML = async (url,headers=null) => {
-    
+const getHTML = async (url, headers = null) => {
+
     const browser = await initBrowser;
     var page = await browser.newPage();
     page = await addRequestFilter(page);
-    if(headers){
+    if (headers) {
         // console.log("headers",headers);
         await page.setExtraHTTPHeaders(headers);
     }
@@ -94,7 +94,7 @@ const getHTML = async (url,headers=null) => {
     return await page.content();
 
 }
-const getScreenshot = async (url,headers=null) => {
+const getScreenshot = async (url, headers = null) => {
 
     const browser = await initBrowser;
     var page = await browser.newPage();
@@ -106,8 +106,11 @@ const getScreenshot = async (url,headers=null) => {
     const image = await page.screenshot({
         type: "png",
     });
+
+    const html = await page.content();
+
     page.close();
-    return image;
+    return { image, html };
 
 }
 
@@ -143,47 +146,48 @@ app.get("/testscreenshot", async (req, res) => {
 })
 app.post("/html", async (req, res) => {
     const data = req.body;
-    if(!("url" in data)){
+    if (!("url" in data)) {
         res.type("json");
         return res.send(JSON.stringify({
-            "error":"no url parameter in request",
+            "error": "no url parameter in request",
         }));
     }
-    const {url,headers} = data;
+    const { url, headers } = data;
 
-    try{
-        const html = await getHTML(url,headers);
+    try {
+        const html = await getHTML(url, headers);
         res.type("json").send(JSON.stringify({
             html: html
         }));
     }
-    catch(e){
+    catch (e) {
         return res.type("json").send(JSON.stringify({
-            "error":"can't open page",
+            "error": "can't open page",
         }));
     }
 })
 app.post("/screenshot", async (req, res) => {
     const data = req.body;
-    if(!("url" in data)){
+    if (!("url" in data)) {
         return res.type("json").send(JSON.stringify({
-            "error":"no url parameter in request",
+            "error": "no url parameter in request",
         }));
     }
     const url = data['url'];
-    
-    try{
-        const image = await getScreenshot(url);
+
+    try {
+        const { image, html } = await getScreenshot(url);
         // convert buffer to base64 string
         const base64Image = await image.toString('base64');
-    
+
         return res.type("json").send(JSON.stringify({
-            "screenshot": "data:image/png;base64," + base64Image
+            "base64": "data:image/png;base64," + base64Image,
+            "html":html,
         }));
     }
-    catch(e){
+    catch (e) {
         return res.type("json").send(JSON.stringify({
-            "error":"can't open page",
+            "error": "can't open page",
         }));
     }
 })
