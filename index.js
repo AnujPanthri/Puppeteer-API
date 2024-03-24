@@ -100,6 +100,11 @@ const getScreenshot = async (url, headers = null) => {
     const browser = await initBrowser;
     var page = await browser.newPage();
 
+    if (headers) {
+        // console.log("headers",headers);
+        await page.setExtraHTTPHeaders(headers);
+    }
+    
     await page.goto(url, {
         waitUntil: "domcontentloaded",
     });
