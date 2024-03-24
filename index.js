@@ -25,6 +25,7 @@ async function addRequestFilter(page) {
     const resourcetypes = ['document'];
 
     await page.setRequestInterception(true);
+    // page.
     page.on("request", (request) => {
         // return request.continue();
         if (resourcetypes.includes(request.resourceType())) {
@@ -100,7 +101,7 @@ const getScreenshot = async (url, headers = null) => {
     var page = await browser.newPage();
 
     await page.goto(url, {
-        // waitUntil: "domcontentloaded",
+        waitUntil: "domcontentloaded",
     });
 
     const image = await page.screenshot({
