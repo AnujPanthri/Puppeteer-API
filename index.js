@@ -49,7 +49,6 @@ const getData = async (url) => {
     await page.goto(url, {
         waitUntil: "domcontentloaded",
     });
-    // console.log(await page.content());
 
     const title = await page.evaluate(() => {
         const elem = document.querySelector("span.B_NuCI");
