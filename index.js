@@ -47,7 +47,7 @@ const getData = async (url) => {
     page = await addRequestFilter(page);
 
     await page.goto(url, {
-        waitUntil: "domcontentloaded",
+        // waitUntil: "domcontentloaded",
     });
 
     const title = await page.evaluate(() => {
