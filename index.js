@@ -98,6 +98,7 @@ const getScreenshot = async (url, headers = null) => {
 
     const browser = await initBrowser;
     var page = await browser.newPage();
+    page = await addRequestFilter(page);
 
     if (headers) {
         // console.log("headers",headers);
@@ -147,7 +148,7 @@ app.get("/testscreenshot", async (req, res) => {
     res.type("json");
     return res.send(JSON.stringify({
         // "html":html,
-        "screenshot": "data:image/png;base64," + base64Image
+        "screenshot": base64Image
     }));
 })
 app.post("/html", async (req, res) => {
@@ -187,7 +188,7 @@ app.post("/screenshot", async (req, res) => {
         const base64Image = await image.toString('base64');
 
         return res.type("json").send(JSON.stringify({
-            "base64": "data:image/png;base64," + base64Image,
+            "base64": base64Image,
             "html":html,
         }));
     }
