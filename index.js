@@ -140,12 +140,13 @@ app.get("/testhtml", async (req, res) => {
     }));
 })
 app.get("/testscreenshot", async (req, res) => {
-    const image = await getScreenshot(url);
+    const {html,image} = await getScreenshot(url);
     // convert buffer to base64 string
     const base64Image = await image.toString('base64');
 
     res.type("json");
     return res.send(JSON.stringify({
+        // "html":html,
         "screenshot": "data:image/png;base64," + base64Image
     }));
 })
